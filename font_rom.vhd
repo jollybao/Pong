@@ -39,7 +39,7 @@ end font_rom;
 
 architecture Behavioral of font_rom is
    
-
+	signal data: STD_LOGIC_VECTOR(7 downto 0);
 	type rom_type is array (0 to 2047) of std_logic_vector(0 to 7);
 
 	-- ROM definition
@@ -2223,7 +2223,9 @@ architecture Behavioral of font_rom is
 		"00000000"  -- f
 	);
 begin
-
-	dataOut <= ROM(to_integer(unsigned(addr)));	
-	
+	process(addr)
+	begin
+	data <= ROM(to_integer(unsigned(addr)));	
+	end process;
+	dataOut <= data;
 end Behavioral;

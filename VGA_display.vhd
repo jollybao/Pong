@@ -40,15 +40,13 @@ entity VGA_display is
            ball_y: in  STD_LOGIC_VECTOR (9 downto 0);
 			  bar_left: in  STD_LOGIC_VECTOR (9 downto 0);
            bar_right: in  STD_LOGIC_VECTOR (9 downto 0);
-			  addr : OUT std_logic_vector(10 downto 0);          
-			  dataIn : IN std_logic_vector(7 downto 0);
            RGB: out  STD_LOGIC_VECTOR (2 downto 0));
 end VGA_display;
 
 architecture Behavioral of VGA_display is
 
 type rom is array (0 to 15) of
-	STD_LOGIC_VECTOR (0 to 15);
+	STD_LOGIC_VECTOR (15 downto 0);
 constant ball_shape: rom := (
 	"0000011111100000",
 	"0001111111111000",
@@ -67,6 +65,146 @@ constant ball_shape: rom := (
 	"0001111111111000",
 	"0000011111100000"
 );
+type rom_num is array (0 to 127) of
+	STD_LOGIC_VECTOR (0 to 7);
+constant score: rom_num := (
+		-- 0: code x30
+		"00000000", -- 0
+		"00000000", -- 1
+		"01111100", -- 2  *****
+		"11000110", -- 3 **   **
+		"11000110", -- 4 **   **
+		"11001110", -- 5 **  ***
+		"11011110", -- 6 ** ****
+		"11110110", -- 7 **** **
+		"11100110", -- 8 ***  **
+		"11000110", -- 9 **   **
+		"11000110", -- a **   **
+		"01111100", -- b  *****
+		"00000000", -- c
+		"00000000", -- d
+		"00000000", -- e
+		"00000000", -- f
+		-- 1: code x31
+		"00000000", -- 0
+		"00000000", -- 1
+		"00011000", -- 2
+		"00111000", -- 3
+		"01111000", -- 4    **
+		"00011000", -- 5   ***
+		"00011000", -- 6  ****
+		"00011000", -- 7    **
+		"00011000", -- 8    **
+		"00011000", -- 9    **
+		"00011000", -- a    **
+		"01111110", -- b    **
+		"00000000", -- c    **
+		"00000000", -- d  ******
+		"00000000", -- e
+		"00000000", -- f
+		-- 2: code x32
+		"00000000", -- 0
+		"00000000", -- 1
+		"01111100", -- 2  *****
+		"11000110", -- 3 **   **
+		"00000110", -- 4      **
+		"00001100", -- 5     **
+		"00011000", -- 6    **
+		"00110000", -- 7   **
+		"01100000", -- 8  **
+		"11000000", -- 9 **
+		"11000110", -- a **   **
+		"11111110", -- b *******
+		"00000000", -- c
+		"00000000", -- d
+		"00000000", -- e
+		"00000000", -- f
+		-- 3: code x33
+		"00000000", -- 0
+		"00000000", -- 1
+		"01111100", -- 2  *****
+		"11000110", -- 3 **   **
+		"00000110", -- 4      **
+		"00000110", -- 5      **
+		"00111100", -- 6   ****
+		"00000110", -- 7      **
+		"00000110", -- 8      **
+		"00000110", -- 9      **
+		"11000110", -- a **   **
+		"01111100", -- b  *****
+		"00000000", -- c
+		"00000000", -- d
+		"00000000", -- e
+		"00000000", -- f
+		-- 4: code x34
+		"00000000", -- 0
+		"00000000", -- 1
+		"00001100", -- 2     **
+		"00011100", -- 3    ***
+		"00111100", -- 4   ****
+		"01101100", -- 5  ** **
+		"11001100", -- 6 **  **
+		"11111110", -- 7 *******
+		"00001100", -- 8     **
+		"00001100", -- 9     **
+		"00001100", -- a     **
+		"00011110", -- b    ****
+		"00000000", -- c
+		"00000000", -- d
+		"00000000", -- e
+		"00000000", -- f
+		-- code x35
+		"00000000", -- 0
+		"00000000", -- 1
+		"11111110", -- 2 *******
+		"11000000", -- 3 **
+		"11000000", -- 4 **
+		"11000000", -- 5 **
+		"11111100", -- 6 ******
+		"00000110", -- 7      **
+		"00000110", -- 8      **
+		"00000110", -- 9      **
+		"11000110", -- a **   **
+		"01111100", -- b  *****
+		"00000000", -- c
+		"00000000", -- d
+		"00000000", -- e
+		"00000000", -- f
+		-- code x36
+		"00000000", -- 0
+		"00000000", -- 1
+		"00111000", -- 2   ***
+		"01100000", -- 3  **
+		"11000000", -- 4 **
+		"11000000", -- 5 **
+		"11111100", -- 6 ******
+		"11000110", -- 7 **   **
+		"11000110", -- 8 **   **
+		"11000110", -- 9 **   **
+		"11000110", -- a **   **
+		"01111100", -- b  *****
+		"00000000", -- c
+		"00000000", -- d
+		"00000000", -- e
+		"00000000", -- f
+		-- code x3a
+		"00000000", -- 0
+		"00000000", -- 1
+		"00000000", -- 2
+		"00000000", -- 3
+		"00011000", -- 4    **
+		"00011000", -- 5    **
+		"00000000", -- 6
+		"00000000", -- 7
+		"00000000", -- 8
+		"00011000", -- 9    **
+		"00011000", -- a    **
+		"00000000", -- b
+		"00000000", -- c
+		"00000000", -- d
+		"00000000", -- e
+		"00000000"  -- f
+);
 
 constant wall_left: integer := 20;
 constant wall_right: integer := 620;
@@ -84,10 +222,10 @@ signal ball_row: STD_LOGIC_VECTOR(15 DOWNTO 0);
 signal wall_rgb,bar_rgb,ball_rgb,text_rgb: STD_LOGIC_VECTOR(2 DOWNTO 0);
 signal ball_bit: STD_LOGIC;
 
-signal text_addr: STD_LOGIC_VECTOR (10 DOWNTO 0);
-signal char_addr: STD_LOGIC_VECTOR (6 DOWNTO 0);
+signal text_addr: STD_LOGIC_VECTOR (6 DOWNTO 0);
+signal char_addr: STD_LOGIC_VECTOR (2 DOWNTO 0);
 signal text_col: unsigned (2 DOWNTO 0);
-signal text_row: STD_LOGIC_VECTOR(7 DOWNTO 0);
+signal text_row: STD_LOGIC_VECTOR(0 to 7);
 signal text_bit: STD_LOGIC;
 
 begin
@@ -121,19 +259,17 @@ ball_rgb <= "001";
 
 ----------------------------------------
 
-text_in <= '1' when y < 64 and x_counter(9 downto 6) < 3 else
+text_in <= '1' when y_counter(9 downto 6) = 0 and  x_counter(9 downto 5) >= 8 and x_counter(9 downto 5) < 11 else
 	'0';
-with x_counter(7 downto 6) select
+with x_counter(8 downto 5) select
 		char_addr <=
-		"0110" & p1_score when "00",
-		"0111010" when "01",
-		"0110" & p2_score when others;
+			p1_score when "1000",
+			"111"		when "1001",
+		   p2_score when others;
 text_addr <= char_addr & y_counter(5 downto 2);
  
-			 
-addr <= text_addr;
-text_row <= dataIn;
-text_col <= x(8 downto 6);
+text_row <= score(to_integer(unsigned(text_addr)));			 
+text_col <= x(4 downto 2);
 text_bit <= text_row(to_integer(text_col)); 
 
 text_on <= '1' when text_in = '1' and text_bit = '1' else

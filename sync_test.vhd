@@ -65,6 +65,8 @@ architecture Behavioral of sync_test is
 			  start : IN STD_LOGIC;
 			  ball_x : out  STD_LOGIC_VECTOR(9 DOWNTO 0);
 			  ball_y : out  STD_LOGIC_VECTOR(9 DOWNTO 0);
+			  p1_score: out STD_LOGIC_VECTOR(2 DOWNTO 0);
+			  p2_score: out STD_LOGIC_VECTOR(2 DOWNTO 0);
            pos : OUT  STD_LOGIC_VECTOR(9 DOWNTO 0));
 		END COMPONENT;
 		
@@ -77,18 +79,10 @@ architecture Behavioral of sync_test is
 				ball_x : IN std_logic_vector(9 downto 0);
 				ball_y : IN std_logic_vector(9 downto 0);
 				bar_left : IN std_logic_vector(9 downto 0);
-				bar_right : IN std_logic_vector(9 downto 0);
-				addr : OUT std_logic_vector(10 downto 0);          
-				dataIn : IN std_logic_vector(7 downto 0);				
+				bar_right : IN std_logic_vector(9 downto 0);					
 				RGB : OUT std_logic_vector(2 downto 0));
 		END COMPONENT;
  
-		COMPONENT font_rom
-			PORT(
-				addr : IN std_logic_vector(10 downto 0);          
-				dataOut : OUT std_logic_vector(7 downto 0)
-				);
-		END COMPONENT;
 	
      --buffer
      signal video: STD_LOGIC;
@@ -98,9 +92,9 @@ architecture Behavioral of sync_test is
 	  signal rgb_next: STD_LOGIC_VECTOR (2 DOWNTO 0);
 	  signal bx: STD_LOGIC_VECTOR (9 DOWNTO 0);
 	  signal by: STD_LOGIC_VECTOR (9 DOWNTO 0);
+	  signal score_l: STD_LOGIC_VECTOR(2 DOWNTO 0);
+	  signal score_r: STD_LOGIC_VECTOR(2 DOWNTO 0);
 	  signal enable: STD_LOGIC;
-	  signal address: STD_LOGIC_VECTOR(10 downto 0);
-	  signal data: STD_LOGIC_VECTOR(7 downto 0);
 	  
 begin
     
@@ -124,26 +118,21 @@ begin
 			  start => start,
 			  ball_x => bx, 
 			  ball_y => by,
+			  p1_score => score_l, 
+			  p2_score => score_r,
            pos => p);
 		
 		Inst_VGA_display: VGA_display PORT MAP(
 			x_counter => xc,
 			y_counter => yc,
-			p1_score => "010", 
-			p2_score => "111",
+			p1_score => score_l, 
+			p2_score => score_r,
 			ball_x => bx,
 			ball_y => by,
 			bar_left => p,
 			bar_right => p,
-			addr => address,
-			dataIn => data,
 			RGB => rgb_next);
 
-		Inst_font_rom: font_rom PORT MAP(
-			addr => address,
-			dataOut => data
-			);
-		
 		
 		rgb <= rgb_next when video = '1' else "000";
 

@@ -39,6 +39,8 @@ entity game is
 			  start : in STD_LOGIC;
 			  ball_x : out  STD_LOGIC_VECTOR(9 DOWNTO 0);
 			  ball_y : out  STD_LOGIC_VECTOR(9 DOWNTO 0);
+			  p1_score: out STD_LOGIC_VECTOR(2 DOWNTO 0);
+			  p2_score: out STD_LOGIC_VECTOR(2 DOWNTO 0);
            pos : out  STD_LOGIC_VECTOR(9 DOWNTO 0));
 end game;
 
@@ -50,7 +52,8 @@ signal y_buffer: unsigned (9 DOWNTO 0) := "0011001000";
 signal pos_next,x_next,y_next,x,y,vy_next,vx_next,p: unsigned (9 DOWNTO 0);
 signal vx,vy: unsigned(9 DOWNTO 0) := to_unsigned(2,10);
 signal dead_l,dead_l_next,dead_r,dead_r_next: STD_LOGIC := '0';
-
+signal score_l,score_r,score_l_next,score_r_next: unsigned(2 DOWNTO 0) := "000";
+signal stop,stop_next: STD_LOGIC := '0';
 
 constant v_plus: unsigned(9 DOWNTO 0) := to_unsigned(2,10);
 constant v_minus: unsigned(9 DOWNTO 0) := unsigned(to_signed(-2,10));
@@ -73,8 +76,9 @@ constant bottom: integer := 150;
 
 begin
 	enable <= En;
-	
-	process(clk,rst,start,dead_l,dead_r)
+	stop_next <= '1' when score_l = "110" or score_r = "110" else
+		'0';
+	process(clk,rst,start,stop,dead_l,dead_r)
 	begin
 		if rst = '1' then
 			pos_buffer <= "0011001000";
@@ -84,14 +88,31 @@ begin
 			vy <= v_minus;
 			dead_l <= '0';
 			dead_r <= '0';
-		elsif rising_edge(clk) and start = '1' and dead_r = '0' and dead_l = '0' then
-			pos_buffer <= pos_next;
-			x_buffer <= x_next;
-			y_buffer <= y_next;
-			dead_l <= dead_l_next;
-			dead_r <= dead_r_next;
-			vy <= vy_next;
-			vx <= vx_next;
+			score_l <= "000";
+			score_r <= "000";	
+			stop <= '0';
+		elsif rising_edge(clk) and stop = '0' then	
+			if start = '1' then
+				pos_buffer <= pos_next;
+				x_buffer <= x_next;
+				y_buffer <= y_next;
+				dead_l <= dead_l_next;
+				dead_r <= dead_r_next;
+				vy <= vy_next;
+				vx <= vx_next;
+				stop <= stop_next;
+				score_r <= score_r_next;
+				score_l <= score_l_next;
+			end if;		
+			if dead_l = '1' or dead_r = '1' then		
+				pos_buffer <= "0011001000";
+				x_buffer <= "0101000000";
+				y_buffer <= "0011001000";
+				vx <= v_plus;
+				vy <= v_minus;
+				dead_l <= '0';
+				dead_r <= '0';
+			end if;
 		end if;
 	end process;
 	
@@ -115,9 +136,12 @@ begin
 	
 	dead_l_next <= '1' when x_buffer = bar_l and (y_buffer > p + bar_length or y_buffer < p - bar_length) else
 		'0';
-		
 	dead_r_next <= '1' when x_buffer = bar_r and (y_buffer > p + bar_length or y_buffer < p - bar_length) else
 		'0';	
+	score_l_next <= score_l + 1 when dead_r_next = '1' else
+		score_l;
+	score_r_next <= score_r + 1 when dead_l_next = '1' else
+		score_r;
 	
 	process(x,y,vx,vy,p)
 	begin
@@ -156,5 +180,7 @@ begin
 pos <= STD_LOGIC_VECTOR(pos_buffer(9 DOWNTO 0));
 ball_x <= STD_LOGIC_VECTOR(x_buffer(9 DOWNTO 0));
 ball_y <= STD_LOGIC_VECTOR(y_buffer(9 DOWNTO 0));
+p1_score <= STD_LOGIC_VECTOR(score_l);
+p2_score <= STD_LOGIC_VECTOR(score_r);
 end Behavioral;
 
