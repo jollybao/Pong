@@ -76,9 +76,9 @@ constant bottom: integer := 150;
 
 begin
 	enable <= En;
-	stop_next <= '1' when score_l = "110" or score_r = "110" else
+	stop_next <= '1' when score_l = 6 or score_r = 6 else
 		'0';
-	process(clk,rst,start,stop,dead_l,dead_r)
+	process(clk,rst,start,stop)
 	begin
 		if rst = '1' then
 			pos_buffer <= "0011001000";
@@ -101,18 +101,19 @@ begin
 				vy <= vy_next;
 				vx <= vx_next;
 				stop <= stop_next;
-				score_r <= score_r_next;
-				score_l <= score_l_next;
-			end if;		
-			if dead_l = '1' or dead_r = '1' then		
-				pos_buffer <= "0011001000";
-				x_buffer <= "0101000000";
-				y_buffer <= "0011001000";
-				vx <= v_plus;
-				vy <= v_minus;
-				dead_l <= '0';
-				dead_r <= '0';
-			end if;
+				
+				if dead_l = '1' or dead_r = '1' then		
+					pos_buffer <= "0011001000";
+					x_buffer <= "0101000000";
+					y_buffer <= "0011001000";
+					vx <= v_plus;
+					vy <= v_minus;
+					dead_l <= '0';
+					dead_r <= '0';
+					score_r <= score_r_next;
+					score_l <= score_l_next;
+				end if;
+			end if;			
 		end if;
 	end process;
 	
